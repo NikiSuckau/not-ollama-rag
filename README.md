@@ -1,6 +1,6 @@
-# Ollama LLM RAG
+# OpenAI-Compatible API RAG
 
-This project is a customizable Retrieval-Augmented Generation (RAG) implementation using Ollama for a private local instance Large Language Model (LLM) agent with a convenient web interface. It uses both static memory (implemented for PDF ingestion) and dynamic memory that recalls previous conversations with day-bound timestamps.
+This project is a customizable Retrieval-Augmented Generation (RAG) implementation using OpenAI-compatible APIs for a private Large Language Model (LLM) agent with a convenient web interface. It uses both static memory (implemented for PDF ingestion) and dynamic memory that recalls previous conversations with day-bound timestamps.
 
 In other words, this project is a chatbot that simulates conversation with a person who remembers previous conversations and can reference a bunch of PDFs.
 
@@ -8,8 +8,8 @@ It is written in Python and based on the simple [pdfchat example project](https:
 
 ## Features
 
-- Configure the agent (chatbot) with a script, or dive into the Modelfile yourself
-- Configure the models used for your chatbot with a script
+- Configure the agent (chatbot) with a script
+- Works with any OpenAI-compatible API endpoint (DeepSeek, OpenAI, Anthropic via proxy, etc.)
 - (Optional) Easily scrape your collection of PDFs and ingest with handy scripts
 - Simple interface to run and interact with the chatbot agent using Streamlit
 - Long term memory, compressing and making searchable with day-bound timestamps
@@ -19,9 +19,8 @@ It is written in Python and based on the simple [pdfchat example project](https:
 
 ### Prerequisites
 
-- Your computer is a Mac or Linux. It will run on Windows probably with some light tweaks
-- Ollama is installed, see https://ollama.com/download
-- Your base model(s) is in installed, e.g. the defaults are `qwen` and `mistral`. Use `ollama run qwen` for example to fetch the binary, it is a few Gb
+- Your computer is a Mac, Linux, or Windows
+- An OpenAI-compatible API key and endpoint (e.g., DeepSeek, OpenAI, local API server, etc.)
 - Python 3+ is installed and available in the environment, use `pyenv` for the best results
 
 ### Install
@@ -33,21 +32,24 @@ It is written in Python and based on the simple [pdfchat example project](https:
 
 ### Configure
 
-_Make sure Ollama service is running before configuring._
+_Make sure you have your API key and endpoint ready._
 
-- `python setup.py` - this will prompt you for details on the agent to create it. It writes to `config.json` which is required by the main scripts `converse.py` and `app.py`. If you want to run it again, delete any existing `config.json`
+- `python setup.py` - this will prompt you for details on the agent and API configuration to create it. It writes to `config.json` which is required by the main scripts `converse.py` and `app.py`. If you want to run it again, delete any existing `config.json`
+  - You'll be asked for your API endpoint URL (e.g., `https://api.deepseek.com/v1`)
+  - You'll be asked for your API key
+  - You'll be asked for the model names to use (e.g., `deepseek-chat`)
 - (optional) scrape PDFs. See section on this below
 
 ### Run
 
-_Make sure Ollama service is running before running._
+_Make sure your API key and endpoint are correctly configured._
 
 - `./run.sh` - launches the chatbot in your default browser
 - or `./cleanRun.sh` - wipe the local dynamic memory (but keep static memory) and launch again
 
 ### Uninstall
 
-- `ollama rm ragmain` to remove the custom LLM from Ollama used for this project
+- Delete the project directory to remove all local data
 
 ## Contributing
 
@@ -57,13 +59,21 @@ Note also that the ChromaDB files are ignored in `.gitignore`, as well as the JS
 
 ## In more detail
 
-### Ollama
+### OpenAI-Compatible APIs
 
-Ollama is a handy LLM runner that has a lot of repositories configured with the most popular models ready to go. It runs on CPU so if you're using a slightly old Macbook Pro (like I am) you can run LLMs locally.
+This project works with any OpenAI-compatible API endpoint, including:
 
-This is particularly cool because the simulated conversation input/output does not leave your computer. Being able to run it yourself locally is positive ownership of your data, protects your privacy and allows you to experiment freely with more confidence.
+- **DeepSeek API** (default): `https://api.deepseek.com/v1` with `deepseek-chat` model
+- **OpenAI API**: `https://api.openai.com/v1` with models like `gpt-3.5-turbo`, `gpt-4`, etc.
+- **Local API servers**: Any local deployment that follows OpenAI API format
+- **Other providers**: Many providers offer OpenAI-compatible endpoints
 
-However, running on CPU is going to be _a lot_ slower, so bear that in mind.
+The advantage of using remote APIs is that you don't need powerful local hardware to run large language models. However, your conversations will be sent to the API provider, so consider privacy implications.
+
+For maximum privacy, you can use local API servers like:
+- **Ollama with OpenAI compatibility**: Run `ollama serve` and use `http://localhost:11434/v1`
+- **LocalAI**: A local API server compatible with OpenAI format
+- **LM Studio**: Local model serving with OpenAI API compatibility
 
 ### RAG and ChromaDB
 
