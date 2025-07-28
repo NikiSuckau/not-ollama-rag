@@ -1,5 +1,5 @@
 from langchain_community.vectorstores import Chroma
-from langchain_community.chat_models import ChatOllama
+from langchain_openai import ChatOpenAI
 from langchain_community.embeddings import FastEmbedEmbeddings
 from langchain.schema.runnable import RunnablePassthrough
 from langchain.schema.output_parser import StrOutputParser
@@ -11,8 +11,6 @@ from tinydb import TinyDB
 from datetime import datetime
 from random import randrange
 import os, re, subprocess
-
-MAIN_MODEL_NAME = "ragmain"
 
 WEB_SEARCH_ENABLED = False
 SPEAK_ALOUD_MAC_ENABLED = False
@@ -54,8 +52,19 @@ class Converse:
         self.user_name = agent_table_row["user_name"]
         self.agent_name = agent_table_row["agent_name"]
 
-        self.model = ChatOllama(model=MAIN_MODEL_NAME)
-        self.tech_model = ChatOllama(model=model_table_row["fast_model"])
+        # Initialize OpenAI-compatible models
+        self.model = ChatOpenAI(
+            model=model_table_row["main_model"],
+            api_key=model_table_row["api_key"],
+            base_url=model_table_row["api_base_url"],
+            temperature=0.7
+        )
+        self.tech_model = ChatOpenAI(
+            model=model_table_row["fast_model"],
+            api_key=model_table_row["api_key"], 
+            base_url=model_table_row["api_base_url"],
+            temperature=0.3
+        )
         self.text_splitter = RecursiveCharacterTextSplitter(chunk_size=1024, chunk_overlap=100)
         self.memory = ConversationBufferMemory(ai_prefix=self.agent_name)
 

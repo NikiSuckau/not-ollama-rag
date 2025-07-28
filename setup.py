@@ -1,12 +1,9 @@
 from tinydb import TinyDB
 import os, re, shutil, subprocess
 
-MAIN_MODEL_DEFAULT = "gemma:7b"
-FAST_MODEL_DEFAULT = "mistral"
-MAIN_MODEL_NAME = "ragmain"
-
-MODELFILE_TEMPLATE = "Modelfile-template"
-MODELFILE_GENERATED = "Modelfile-generated"
+MAIN_MODEL_DEFAULT = "deepseek-chat"
+FAST_MODEL_DEFAULT = "deepseek-chat"
+API_BASE_URL_DEFAULT = "https://api.deepseek.com/v1"
 
 db = TinyDB('./config.json')
 agent_table = db.table('agent')
@@ -17,8 +14,6 @@ def start():
     print("*** CONFIG TOOL")
     configAgent()
     configModel()
-    writeModelfile()
-    createModel()
     print("*** CONFIG IS COMPLETE")
 
 def configAgent():
@@ -77,20 +72,38 @@ def configModel():
     if row == None:
         row = {"active": True}
         model_table.insert(row)
-    if row.get("main_model_source") == None:
+    if row.get("api_base_url") == None:
         user_input = inputForAccepted(
-            "Ollama model or GGUF file path for custom main model:",
-            lambda: input(f"(Empty for default \'{MAIN_MODEL_DEFAULT}\')> Model or GGUF file path: "),
+            "OpenAI-compatible API base URL:",
+            lambda: input(f"(Empty for default '{API_BASE_URL_DEFAULT}')> API Base URL: "),
+            lambda _: print("Accept?")
+        ).strip()
+        if user_input == "":
+            user_input = API_BASE_URL_DEFAULT
+        row["api_base_url"] = user_input
+        model_table.update(row, doc_ids=[1])
+    if row.get("api_key") == None:
+        user_input = inputForAccepted(
+            "API Key:",
+            lambda: input(f"> API Key: "),
+            lambda _: print("Accept?")
+        ).strip()
+        row["api_key"] = user_input
+        model_table.update(row, doc_ids=[1])
+    if row.get("main_model") == None:
+        user_input = inputForAccepted(
+            "Main model name for conversation:",
+            lambda: input(f"(Empty for default '{MAIN_MODEL_DEFAULT}')> Main model: "),
             lambda _: print("Accept?")
         ).strip()
         if user_input == "":
             user_input = MAIN_MODEL_DEFAULT
-        row["main_model_source"] = user_input
+        row["main_model"] = user_input
         model_table.update(row, doc_ids=[1])
     if row.get("fast_model") == None:
         user_input = inputForAccepted(
-            "Small and fast Ollama model for simpler cases:",
-            lambda: input(f"(Empty for default \'{FAST_MODEL_DEFAULT}\')> Model: "),
+            "Fast model name for simple tasks:",
+            lambda: input(f"(Empty for default '{FAST_MODEL_DEFAULT}')> Fast model: "),
             lambda _: print("Accept?")
         ).strip()
         if user_input == "":
@@ -98,33 +111,6 @@ def configModel():
         row["fast_model"] = user_input
         model_table.update(row, doc_ids=[1])
     print("Model config is complete")
-
-def writeModelfile():
-    print("Creating Modelfile for Ollama...")
-    shutil.copy(MODELFILE_TEMPLATE, MODELFILE_GENERATED)
-    agent_table_row = agent_table.all()[0]
-    model_table_row = model_table.all()[0]
-    mapper = {
-        "agent_type": agent_table_row["agent_type"],
-        "agent_name": agent_table_row["agent_name"],
-        "agent_relation": agent_table_row["agent_relation"],
-        "agent_attitude": agent_table_row["agent_attitude"],
-        "user_name": agent_table_row["user_name"],
-        "main_model_source": model_table_row["main_model_source"]
-    }
-    print(mapper)
-    contents = ""
-    with open(MODELFILE_GENERATED, 'r') as file:
-        contents = file.read()
-        for key, value in mapper.items():
-            contents = re.sub(f"\\[{str(key)}\\]", value, contents)
-    with open(MODELFILE_GENERATED, 'w') as file:
-        file.write(contents)
-    
-
-def createModel():
-    print("Creating model from modelfile using Ollama...")
-    subprocess.check_output(f"ollama create {MAIN_MODEL_NAME} -f {MODELFILE_GENERATED}", shell=True)
 
 def flatten(list_of_dicts):
     result = {}
