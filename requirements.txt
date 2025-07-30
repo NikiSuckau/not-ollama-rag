@@ -1,7 +1,11 @@
-langchain==0.2.6
-langchain_community==0.2.6
-langchain_openai==0.1.9
-fastembed==0.3.2
-streamlit==1.32.2
+langchain==0.3.27
+langchain_community==0.3.27
+langchain_openai==0.3.28
+langchain-chroma==0.2.5
+fastembed==0.7.1
+streamlit==1.47.1
 streamlit_chat==0.1.1
-tinydb==4.8.0
+tinydb==4.8.2
+chromadb==1.0.15
+pypdf==5.9.0
+
